@@ -1,0 +1,29 @@
+name: CarryMe
+version: '${project.version}'
+main: net.aquiles.carryme.CarryMe
+website: discord.gg/Wq9AHJP6VJ
+api-version: 1.13
+author: Aquiles
+description: Un plugin divertido para llevar a tus amigos en los hombros.
+
+commands:
+  cargar:
+    description: Envia una peticion para cargar a un jugador.
+  aceptar:
+    description: Acepta una peticion.
+  rechazar:
+    description: Rechaza una peticion.
+  soltar:
+    description: Suelta al jugador que llevas.
+  carryme:
+    description: Comando principal para recargar config.
+
+permissions:
+  carryme.cargar:
+    default: true
+  carryme.aceptar:
+    default: true
+  carryme.soltar:
+    default: true
+  carryme.reload:
+    default: op

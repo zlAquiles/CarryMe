@@ -1,0 +1,36 @@
+# ======================================================== #
+#                       CarryMe                            #
+#              Desarrollado por Aquiles                    #
+# ======================================================== #
+
+Configuracion:
+  # Distancia máxima permitida para pedir cargar a alguien (en bloques)
+  distancia-maxima: 5.0
+  # Tiempo que dura la invitación en pantalla antes de desaparecer (en segundos)
+  tiempo-expiracion: 20
+  # Prefijo del plugin
+  prefijo: "&8[&bCarryMe&8] "
+
+Textos:
+  Errores:
+    sin-permiso: "&c¡Ups! No tienes permiso para hacer esto."
+    uso-incorrecto: "&cUso correcto: &7/cargar <jugador>"
+    auto-carga: "&c¡No puedes cargarte a ti mismo! Romperías la física."
+    muy-lejos: "&c¡El jugador está demasiado lejos! Acércate a %distancia% bloques."
+    no-encontrado: "&cEse jugador no existe o está desconectado."
+    limite-alcanzado: "&c¡Ya estás cargando a alguien! No eres Hulk."
+    ocupado: "&cEse jugador ya está cargando a alguien o siendo cargado."
+
+  Peticiones:
+    enviada: "&a¡Le has pedido a &e%target% &aque se suba a tus hombros!"
+    recibida: "&e%player% &aofrece llevarte en sus hombros. " # Los botones van al lado
+    boton-aceptar: "&a&l[¡Subir!]"
+    boton-rechazar: "&c&l[Rechazar]"
+    expirada: "&eLa petición de carga ha caducado."
+    rechazada: "&c&e%target% &cno quiso subirse a tus hombros."
+
+  Acciones:
+    cargando: "&a¡Ahora llevas a &e%target% &asobre tus hombros!"
+    siendo-cargado: "&a¡Te has subido a los hombros de &e%player%&a!"
+    soltado: "&eHas bajado a &a%target%&e."
+    recargado: "%prefijo%&a¡Configuración y mensajes recargados correctamente!"
