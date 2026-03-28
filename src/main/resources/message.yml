@@ -1,0 +1,32 @@
+# ======================================================== #
+#                         CarryMe                          #
+# ======================================================== #
+
+update-check:
+  available: "&8[&bCarryMe&8] &aUpdate available! &7(&f%current% &7-> &f%new%&7)"
+
+messages:
+  errors:
+    no-permission: "&cYou do not have permission to do that."
+    usage: "&cUsage: &7/carry <player>"
+    self-carry: "&cYou cannot carry yourself."
+    too-far: "&cThat player is too far away. Move within %distance% blocks."
+    player-not-found: "&cThat player is offline or could not be found."
+    limit-reached: "&cYou are already carrying someone."
+    occupied: "&cYou or that player are already carrying someone or being carried."
+    players-only: "&cOnly players can use this command."
+    admin-usage: "&cUsage: &7/carryme reload"
+
+  requests:
+    sent: "&aYou asked &e%target% &ato hop on your shoulders!"
+    received: "&e%player% &awants to carry you. "
+    accept-button: "&a&l[Accept]"
+    reject-button: "&c&l[Reject]"
+    expired: "&eThat carry request has expired."
+    rejected: "&e%target% &cdenied your carry request."
+
+  actions:
+    carrying: "&aYou are now carrying &e%target%&a."
+    being-carried: "&aYou are now on &e%player%&a's shoulders."
+    dropped: "&eYou dropped &a%target%&e."
+    reloaded: "%prefix%&aConfiguration reloaded successfully."

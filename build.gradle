@@ -1,0 +1,56 @@
+plugins {
+    id 'java'
+    id 'com.gradleup.shadow' version '9.3.1'
+}
+
+group = 'net.aquiles'
+version = '1.0.1'
+description = 'Carry your friends on your shoulders with clickable requests.'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        name = 'spigot-repo'
+        url = uri('https://hub.spigotmc.org/nexus/content/repositories/snapshots/')
+    }
+}
+
+dependencies {
+    compileOnly 'org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT'
+    implementation 'org.bstats:bstats-bukkit:3.1.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 17
+}
+
+processResources {
+    filteringCharset = 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand(version: project.version)
+    }
+}
+
+tasks.named('jar') {
+    archiveClassifier.set('plain')
+}
+
+tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    archiveClassifier.set('')
+    relocate 'org.bstats', 'net.aquiles.carryme.lib.bstats'
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('shadowJar')
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('shadowJar')
+}
