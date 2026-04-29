@@ -4,13 +4,15 @@ plugins {
 }
 
 group = 'net.aquiles'
-version = '1.0.1'
+version = '1.0.3'
 description = 'Carry your friends on your shoulders with clickable requests.'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 repositories {
@@ -19,38 +21,83 @@ repositories {
         name = 'spigot-repo'
         url = uri('https://hub.spigotmc.org/nexus/content/repositories/snapshots/')
     }
+    maven {
+        name = 'spigot-public'
+        url = uri('https://hub.spigotmc.org/nexus/content/repositories/public/')
+    }
+    maven {
+        name = 'sonatype-snapshots'
+        url = uri('https://oss.sonatype.org/content/repositories/snapshots/')
+    }
+    maven {
+        name = 'bungeecord-repo'
+        url = uri('https://repo.md-5.net/content/repositories/snapshots/')
+    }
+    maven {
+        name = 'bungeecord-releases'
+        url = uri('https://repo.md-5.net/content/repositories/releases/')
+    }
 }
 
 dependencies {
-    compileOnly 'org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT'
+    compileOnly 'org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT'
     implementation 'org.bstats:bstats-bukkit:3.1.0'
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 17
+    options.release = 8
 }
 
 processResources {
     filteringCharset = 'UTF-8'
-    filesMatching('plugin.yml') {
+    exclude 'plugin.yml', 'plugin-modern.yml', 'plugin-legacy.yml'
+}
+
+def generatedPluginResourceDir = layout.buildDirectory.dir('generated-plugin-resources')
+
+tasks.register('modernPluginResources', Copy) {
+    from('src/main/resources/plugin-modern.yml') {
+        rename { 'plugin.yml' }
         expand(version: project.version)
     }
+    into generatedPluginResourceDir.map { it.dir('modern') }
+}
+
+tasks.register('legacyPluginResources', Copy) {
+    from('src/main/resources/plugin-legacy.yml') {
+        rename { 'plugin.yml' }
+        expand(version: project.version)
+    }
+    into generatedPluginResourceDir.map { it.dir('legacy') }
 }
 
 tasks.named('jar') {
-    archiveClassifier.set('plain')
+    enabled = false
 }
 
 tasks.named('shadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    dependsOn tasks.named('modernPluginResources')
     archiveClassifier.set('')
+    from generatedPluginResourceDir.map { it.dir('modern') }
+    relocate 'org.bstats', 'net.aquiles.carryme.lib.bstats'
+}
+
+tasks.register('legacyShadowJar', com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+    dependsOn tasks.named('classes'), tasks.named('legacyPluginResources')
+    archiveClassifier.set('legacy')
+    from sourceSets.main.output
+    from generatedPluginResourceDir.map { it.dir('legacy') }
+    configurations = [project.configurations.runtimeClasspath]
     relocate 'org.bstats', 'net.aquiles.carryme.lib.bstats'
 }
 
 tasks.named('assemble') {
     dependsOn tasks.named('shadowJar')
+    dependsOn tasks.named('legacyShadowJar')
 }
 
 tasks.named('build') {
     dependsOn tasks.named('shadowJar')
+    dependsOn tasks.named('legacyShadowJar')
 }

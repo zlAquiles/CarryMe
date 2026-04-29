@@ -1,5 +1,6 @@
 # Gradle
 .gradle/
+.gradle-user-home/
 .gradle-tmp/
 build/
 out/
@@ -15,6 +16,10 @@ dependency-reduced-pom.xml
 # Logs
 *.log
 logs/
+
+# Release notes drafts
+CHANGELOG-*.md
+CHANGELOG-*.bbcode
 
 # OS files
 .DS_Store

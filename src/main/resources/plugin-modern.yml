@@ -1,0 +1,34 @@
+name: CarryMe
+version: "${version}"
+main: net.aquiles.carryme.CarryMe
+website: https://discord.gg/WHBWBWWYDq
+api-version: "1.13"
+folia-supported: true
+author: Aquiles
+description: Carry your friends on your shoulders with clickable requests.
+
+commands:
+  cargar:
+    description: Send a carry request to a player.
+  aceptar:
+    description: Accept a pending carry request.
+  rechazar:
+    description: Reject a pending carry request.
+  soltar:
+    description: Drop the player you are carrying.
+  carryme:
+    description: Main admin command.
+
+permissions:
+  carryme.cargar:
+    default: true
+  carryme.aceptar:
+    default: true
+  carryme.rechazar:
+    default: true
+  carryme.soltar:
+    default: true
+  carryme.reload:
+    default: op
+  carryme.update:
+    default: op

@@ -2,6 +2,7 @@ package net.aquiles.carryme.service;
 
 import net.aquiles.carryme.compat.CompatibilityManager;
 import net.aquiles.carryme.config.ConfigKeys;
+import net.aquiles.carryme.util.PassengerAdapter;
 import net.aquiles.carryme.util.PlatformScheduler;
 import net.aquiles.carryme.util.ScheduledTaskHandle;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -12,26 +13,29 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.spigotmc.event.entity.EntityDismountEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class CarryRequestService implements Listener {
 
     private final MessageService messageService;
     private final CompatibilityManager compatibilityManager;
     private final PlatformScheduler platformScheduler;
+    private final PassengerAdapter passengerAdapter;
     private final Map<UUID, UUID> requests = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledTaskHandle> expirationTasks = new ConcurrentHashMap<>();
 
-    public CarryRequestService(MessageService messageService, CompatibilityManager compatibilityManager, PlatformScheduler platformScheduler) {
+    public CarryRequestService(MessageService messageService, CompatibilityManager compatibilityManager, PlatformScheduler platformScheduler, PassengerAdapter passengerAdapter) {
         this.messageService = messageService;
         this.compatibilityManager = compatibilityManager;
         this.platformScheduler = platformScheduler;
+        this.passengerAdapter = passengerAdapter;
     }
 
     public void sendCarryRequest(Player requester, String[] args) {
@@ -160,12 +164,13 @@ public class CarryRequestService implements Listener {
             return;
         }
 
-        if (player.getPassengers().isEmpty()) {
+        List<Entity> passengers = passengerAdapter.getPassengers(player);
+        if (passengers.isEmpty()) {
             return;
         }
 
-        for (Entity passenger : player.getPassengers()) {
-            player.removePassenger(passenger);
+        for (Entity passenger : passengers) {
+            passengerAdapter.removePassenger(player, passenger);
             player.sendMessage(messageService.getMessage(ConfigKeys.Messages.Actions.DROPPED)
                     .replace("%target%", passenger.getName()));
         }
@@ -190,22 +195,26 @@ public class CarryRequestService implements Listener {
     }
 
     @EventHandler
-    public void onDismount(EntityDismountEvent event) {
-        if (event.getEntity() instanceof Player passenger && event.getDismounted() instanceof Player carrier) {
-            carrier.sendMessage(messageService.getMessage(ConfigKeys.Messages.Actions.DROPPED)
-                    .replace("%target%", passenger.getName()));
-        }
-    }
-
-    @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID playerId = event.getPlayer().getUniqueId();
         clearRequest(playerId);
         removeRequestsByRequester(playerId);
     }
 
+    @EventHandler
+    public void onSneak(PlayerToggleSneakEvent event) {
+        if (!event.isSneaking() || !messageService.getBoolean(ConfigKeys.Settings.DROP_ON_SNEAK, true)) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        if (passengerAdapter.hasPassengers(player)) {
+            dropPassengers(player);
+        }
+    }
+
     private boolean isUnavailable(Player player) {
-        return player.getVehicle() != null || !player.getPassengers().isEmpty() || compatibilityManager.blocksCarry(player);
+        return player.getVehicle() != null || passengerAdapter.hasPassengers(player) || compatibilityManager.blocksCarry(player);
     }
 
     private void completeAccept(UUID playerId, UUID requesterId) {
@@ -235,7 +244,11 @@ public class CarryRequestService implements Listener {
             return;
         }
 
-        requester.addPassenger(player);
+        if (!passengerAdapter.addPassenger(requester, player)) {
+            sendMessageToPlayer(playerId, messageService.getMessage(ConfigKeys.Messages.Errors.OCCUPIED));
+            return;
+        }
+
         requester.sendMessage(messageService.getMessage(ConfigKeys.Messages.Actions.CARRYING)
                 .replace("%target%", player.getName()));
         player.sendMessage(messageService.getMessage(ConfigKeys.Messages.Actions.BEING_CARRIED)
@@ -252,7 +265,7 @@ public class CarryRequestService implements Listener {
                 .map(String::trim)
                 .filter(alias -> !alias.isEmpty())
                 .map(alias -> alias.startsWith("/") ? alias.substring(1) : alias)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private void expireRequest(UUID targetId, UUID requesterId) {
@@ -275,7 +288,7 @@ public class CarryRequestService implements Listener {
         List<UUID> targetsToClear = requests.entrySet().stream()
                 .filter(entry -> entry.getValue().equals(requesterId))
                 .map(Map.Entry::getKey)
-                .toList();
+                .collect(Collectors.toList());
         for (UUID targetId : targetsToClear) {
             clearRequest(targetId);
         }

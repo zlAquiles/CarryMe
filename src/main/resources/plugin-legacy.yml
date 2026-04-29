@@ -2,8 +2,6 @@ name: CarryMe
 version: "${version}"
 main: net.aquiles.carryme.CarryMe
 website: https://discord.gg/WHBWBWWYDq
-api-version: "1.19"
-folia-supported: true
 author: Aquiles
 description: Carry your friends on your shoulders with clickable requests.
 

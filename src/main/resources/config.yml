@@ -8,6 +8,8 @@ settings:
   max-distance: 5.0
   # How long a carry request stays pending before it expires (in seconds)
   request-expiration-seconds: 20
+  # Automatically drop carried players when the carrier sneaks
+  drop-on-sneak: true
   # Plugin prefix used in admin messages
   prefix: "&8[&bCarryMe&8] "
 

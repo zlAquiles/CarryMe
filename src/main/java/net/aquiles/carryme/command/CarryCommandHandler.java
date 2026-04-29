@@ -13,17 +13,17 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.server.TabCompleteEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 public class CarryCommandHandler implements CommandExecutor, TabCompleter, Listener {
 
-    private static final List<String> MANAGED_COMMANDS = List.of("carryme", "cargar", "aceptar", "rechazar", "soltar");
+    private static final List<String> MANAGED_COMMANDS = Arrays.asList("carryme", "cargar", "aceptar", "rechazar", "soltar");
 
     private final JavaPlugin plugin;
     private final MessageService messageService;
@@ -48,6 +48,25 @@ public class CarryCommandHandler implements CommandExecutor, TabCompleter, Liste
         return getSuggestions(sender, command.getName().toLowerCase(Locale.ROOT), args);
     }
 
+    public List<String> getAliasSuggestions(CommandSender sender, String buffer) {
+        if (buffer == null || !buffer.startsWith("/")) {
+            return null;
+        }
+
+        String[] split = buffer.substring(1).split("\\s+", -1);
+        if (split.length == 0) {
+            return null;
+        }
+
+        String resolvedCommand = resolveConfiguredCommand(split[0]);
+        if (resolvedCommand == null || resolvedCommand.equalsIgnoreCase(split[0])) {
+            return null;
+        }
+
+        String[] args = Arrays.copyOfRange(split, 1, split.length);
+        return getSuggestions(sender, resolvedCommand, args);
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
         String message = event.getMessage();
@@ -70,46 +89,33 @@ public class CarryCommandHandler implements CommandExecutor, TabCompleter, Liste
         executeCommand(event.getPlayer(), resolvedCommand, args);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onTabComplete(TabCompleteEvent event) {
-        String buffer = event.getBuffer();
-        if (buffer == null || !buffer.startsWith("/")) {
-            return;
-        }
-
-        String[] split = buffer.substring(1).split("\\s+", -1);
-        if (split.length == 0) {
-            return;
-        }
-
-        String resolvedCommand = resolveConfiguredCommand(split[0]);
-        if (resolvedCommand == null || resolvedCommand.equalsIgnoreCase(split[0])) {
-            return;
-        }
-
-        String[] args = Arrays.copyOfRange(split, 1, split.length);
-        event.setCompletions(getSuggestions(event.getSender(), resolvedCommand, args));
-    }
-
     private boolean executeCommand(CommandSender sender, String commandName, String[] args) {
         if ("carryme".equals(commandName)) {
             handleMainCommand(sender, args);
             return true;
         }
 
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             sender.sendMessage(messageService.getMessage(ConfigKeys.Messages.Errors.PLAYERS_ONLY));
             return true;
         }
+        Player player = (Player) sender;
 
         switch (commandName) {
-            case "cargar" -> handleCarry(player, args);
-            case "aceptar" -> handleAccept(player);
-            case "rechazar" -> handleReject(player);
-            case "soltar" -> handleDrop(player);
-            default -> {
+            case "cargar":
+                handleCarry(player, args);
+                break;
+            case "aceptar":
+                handleAccept(player);
+                break;
+            case "rechazar":
+                handleReject(player);
+                break;
+            case "soltar":
+                handleDrop(player);
+                break;
+            default:
                 return false;
-            }
         }
         return true;
     }
@@ -169,13 +175,14 @@ public class CarryCommandHandler implements CommandExecutor, TabCompleter, Liste
             if (!sender.hasPermission("carryme.reload") || args.length > 1) {
                 return Collections.emptyList();
             }
-            return filterSuggestions(List.of("reload"), args);
+            return filterSuggestions(Collections.singletonList("reload"), args);
         }
 
-        if (!"cargar".equals(commandName) || !(sender instanceof Player player) || args.length > 1) {
+        if (!"cargar".equals(commandName) || !(sender instanceof Player) || args.length > 1) {
             return Collections.emptyList();
         }
 
+        Player player = (Player) sender;
         return filterSuggestions(carryRequestService.suggestPlayerNames(player), args);
     }
 
@@ -183,7 +190,7 @@ public class CarryCommandHandler implements CommandExecutor, TabCompleter, Liste
         String input = args.length == 0 ? "" : args[args.length - 1].toLowerCase(Locale.ROOT);
         return suggestions.stream()
                 .filter(suggestion -> suggestion.toLowerCase(Locale.ROOT).startsWith(input))
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private String resolveConfiguredCommand(String input) {

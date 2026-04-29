@@ -19,14 +19,18 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class UpdateChecker implements Listener {
 
-    private static final String VERSION_CHECK_URL = "https://gist.githubusercontent.com/zlAquiles/dbca2bcfb75bd025119195646c7b8769/raw/version.txt";
+    private static final String MODRINTH_PROJECT_ID = "Mt9b9Yn9";
+    private static final String VERSION_CHECK_URL = "https://api.modrinth.com/v2/project/" + MODRINTH_PROJECT_ID + "/version?include_changelog=false";
     private static final String MODRINTH_PROJECT_URL = "https://modrinth.com/plugin/carryme";
     private static final String DEFAULT_CONSOLE_LATEST_MESSAGE = "&8[&bCarryMe&8] &aYou are running the latest version!";
     private static final String DEFAULT_CONSOLE_AVAILABLE_MESSAGE = "&8[&bCarryMe&8] &aNew update is available &7Version: &f%current% &7| &7New version: &f%new%";
     private static final String DEFAULT_PLAYER_AVAILABLE_MESSAGE = "&8[&bCarryMe&8] &aUpdate available! &7(&f%current% &7-> &f%new%&7)";
+    private static final Pattern VERSION_NUMBER_PATTERN = Pattern.compile("\"version_number\"\\s*:\\s*\"((?:\\\\.|[^\"])*)\"");
     private final JavaPlugin plugin;
     private final MessageService messageService;
     private final PlatformScheduler platformScheduler;
@@ -133,7 +137,8 @@ public class UpdateChecker implements Listener {
         connection.setRequestMethod("GET");
         connection.setConnectTimeout(5000);
         connection.setReadTimeout(5000);
-        connection.setRequestProperty("User-Agent", "CarryMe Update Checker");
+        connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("User-Agent", "zlAquiles/CarryMe/" + plugin.getDescription().getVersion() + " (Modrinth update checker)");
 
         try {
             int responseCode = connection.getResponseCode();
@@ -142,12 +147,37 @@ public class UpdateChecker implements Listener {
             }
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
-                String latestVersion = reader.readLine();
-                return latestVersion == null ? "" : latestVersion.trim();
+                StringBuilder response = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                return findLatestVersionNumber(response.toString());
             }
         } finally {
             connection.disconnect();
         }
+    }
+
+    private String findLatestVersionNumber(String responseBody) {
+        Matcher matcher = VERSION_NUMBER_PATTERN.matcher(responseBody);
+        String latestVersion = "";
+        while (matcher.find()) {
+            String version = unescapeJsonString(matcher.group(1)).trim();
+            if (version.isEmpty()) {
+                continue;
+            }
+            if (latestVersion.isEmpty() || compareVersions(normalizeVersion(version), normalizeVersion(latestVersion)) > 0) {
+                latestVersion = version;
+            }
+        }
+        return latestVersion;
+    }
+
+    private String unescapeJsonString(String value) {
+        return value
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");
     }
 
     private boolean isNewerVersion(String currentVersion, String latestVersion) {

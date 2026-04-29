@@ -100,8 +100,8 @@ public class PlatformScheduler {
 
         if (isOwnedByCurrentRegionMethod != null) {
             Object result = invoke(null, isOwnedByCurrentRegionMethod, entity);
-            if (result instanceof Boolean owned) {
-                return owned;
+            if (result instanceof Boolean) {
+                return (Boolean) result;
             }
         }
 

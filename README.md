@@ -11,11 +11,16 @@ CarryMe is a lightweight Minecraft plugin for Spigot, Paper, and Folia servers t
 - Optional GSit hook to block carrying seated, laying, or posing players
 - No NMS usage, which helps keep the plugin simple across supported versions
 
-## Requirements
+## Compatibility
 
-- Java 17+
-- A Spigot, Paper, or Folia-compatible server
-- Built against `spigot-api 1.19.4-R0.1-SNAPSHOT`
+CarryMe builds two jars from the same codebase:
+
+| Jar | Server versions | Notes |
+| --- | --- | --- |
+| `CarryMe-<version>-legacy.jar` | 1.8.8 - 1.12.2 | Java 8+, no `api-version` in `plugin.yml` |
+| `CarryMe-<version>.jar` | 1.13+ | Java 8+ bytecode, includes `api-version: 1.13` and Folia support metadata |
+
+Folia compatibility is handled through runtime scheduler detection, so the modern jar still works on Spigot and Paper. Folia itself is only available on newer Paper/Folia servers, not on the legacy Minecraft versions.
 
 ## Installation
 
@@ -67,24 +72,20 @@ Notable configurable areas include:
 This project uses Gradle.
 
 ```bash
-./gradlew shadowJar
+./gradlew build
 ```
 
 On Windows:
 
 ```powershell
-.\gradlew.bat shadowJar
+.\gradlew.bat build
 ```
 
-The built jar will be generated in:
+The publishable jars will be generated in:
 
 ```text
 build/libs/
 ```
-
-## Notes
-
-- Folia compatibility is handled through runtime scheduler detection, so the same jar still works on Spigot and Paper.
 
 ## Links
 

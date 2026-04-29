@@ -3,6 +3,7 @@ package net.aquiles.carryme.compat;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Arrays;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -10,11 +11,11 @@ import java.util.List;
 
 public class GSitHook implements CarryBlockerHook {
 
-    private static final List<String> API_CLASS_NAMES = List.of(
+    private static final List<String> API_CLASS_NAMES = Arrays.asList(
             "dev.geco.gsit.api.GSitAPI",
             "dev.geco.gsit.api.GSitApi"
     );
-    private static final List<String> METHOD_NAMES = List.of(
+    private static final List<String> METHOD_NAMES = Arrays.asList(
             "isSitting",
             "isPlayerSitting",
             "isLaying",

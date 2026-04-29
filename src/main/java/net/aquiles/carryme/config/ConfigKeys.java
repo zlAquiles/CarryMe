@@ -5,12 +5,28 @@ public final class ConfigKeys {
     private ConfigKeys() {
     }
 
-    public record PathPair(String current, String legacy) {
+    public static final class PathPair {
+        private final String current;
+        private final String legacy;
+
+        public PathPair(String current, String legacy) {
+            this.current = current;
+            this.legacy = legacy;
+        }
+
+        public String current() {
+            return current;
+        }
+
+        public String legacy() {
+            return legacy;
+        }
     }
 
     public static final class Settings {
         public static final PathPair MAX_DISTANCE = new PathPair("settings.max-distance", "Configuracion.distancia-maxima");
         public static final PathPair REQUEST_EXPIRATION_SECONDS = new PathPair("settings.request-expiration-seconds", "Configuracion.tiempo-expiracion");
+        public static final PathPair DROP_ON_SNEAK = new PathPair("settings.drop-on-sneak", null);
         public static final PathPair PREFIX = new PathPair("settings.prefix", "Configuracion.prefijo");
 
         private Settings() {

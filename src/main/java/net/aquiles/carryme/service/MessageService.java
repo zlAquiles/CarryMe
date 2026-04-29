@@ -70,6 +70,14 @@ public class MessageService {
         return defaultValue;
     }
 
+    public boolean getBoolean(PathPair pathPair, boolean defaultValue) {
+        ResolvedPath resolvedPath = resolvePath(pathPair);
+        if (resolvedPath != null) {
+            return resolvedPath.configuration().getBoolean(resolvedPath.path(), defaultValue);
+        }
+        return defaultValue;
+    }
+
     public List<String> getStringList(String path) {
         if (messageConfig != null && messageConfig.isList(path)) {
             return messageConfig.getStringList(path);
@@ -81,7 +89,7 @@ public class MessageService {
     }
 
     public TextComponent legacyTextComponent(String message) {
-        TextComponent component = new TextComponent();
+        TextComponent component = new TextComponent("");
         BaseComponent[] parts = TextComponent.fromLegacyText(colorize(message));
         for (BaseComponent part : parts) {
             component.addExtra(part);
@@ -124,6 +132,21 @@ public class MessageService {
         }
     }
 
-    private record ResolvedPath(FileConfiguration configuration, String path) {
+    private static final class ResolvedPath {
+        private final FileConfiguration configuration;
+        private final String path;
+
+        private ResolvedPath(FileConfiguration configuration, String path) {
+            this.configuration = configuration;
+            this.path = path;
+        }
+
+        private FileConfiguration configuration() {
+            return configuration;
+        }
+
+        private String path() {
+            return path;
+        }
     }
 }
